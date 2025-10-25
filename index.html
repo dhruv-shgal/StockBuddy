@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StockPred - AI-Powered Stock Price Prediction</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Chart.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  
+  <style>
+    /* ===== CSS VARIABLES ===== */
+    :root {
+      --primary: #0ea5e9;
+      --primary-dark: #0284c7;
+      --secondary: #8b5cf6;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-400: #9ca3af;
+      --gray-500: #6b7280;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+      --gray-900: #111827;
+      
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      
+      --spacing-xs: 0.25rem;
+      --spacing-sm: 0.5rem;
+      --spacing-md: 1rem;
+      --spacing-lg: 1.5rem;
+      --spacing-xl: 2rem;
+      --spacing-2xl: 3rem;
+      
+      --radius: 0.5rem;
+      --radius-lg: 0.75rem;
+      --transition: all 0.3s ease;
+    }
+    
+    /* ===== RESET & BASE STYLES ===== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    html {
+      scroll-behavior: smooth;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      line-height: 1.6;
+      color: var(--gray-800);
+      background: var(--gray-50);
+    }
+    
+    /* ===== NAVIGATION ===== */
+    .navbar {
+      position: sticky;
+      top: 0;
+      background: white;
+      box-shadow: var(--shadow);
+      z-index: 1000;
+      padding: var(--spacing-md) 0;
+    }
+    
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 var(--spacing-lg);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-decoration: none;
+    }
+    
+    .nav-links {
+      display: flex;
+      gap: var(--spacing-lg);
+      list-style: none;
+    }
+    
+    .nav-links a {
+      text-decoration: none;
+      color: var(--gray-600);
+      font-weight: 500;
+      transition: var(--transition);
+      padding: var(--spacing-sm) var(--spacing-md);
+      border-radius: var(--radius);
+    }
+    
+    .nav-links a:hover {
+      color: var(--primary);
+      background: var(--gray-100);
+    }
+    
+    /* ===== CONTAINER & SECTIONS ===== */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 var(--spacing-lg);
+    }
+    
+    section {
+      padding: var(--spacing-2xl) 0;
+    }
+    
+    .section-title {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: var(--spacing-md);
+      color: var(--gray-900);
+    }
+    
+    .section-subtitle {
+      font-size: 1.125rem;
+      color: var(--gray-600);
+      margin-bottom: var(--spacing-xl);
+    }
+    
+    /* ===== HERO SECTION ===== */
+    .hero {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: white;
+      text-align: center;
+      padding: var(--spacing-2xl) 0;
+    }
+    
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: var(--spacing-md);
+    }
+    
+    .hero p {
+      font-size: 1.25rem;
+      opacity: 0.95;
+      max-width: 600px;
+      margin: 0 auto var(--spacing-xl);
+    }
+    
+    /* ===== CARDS ===== */
+    .card {
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-xl);
+      box-shadow: var(--shadow);
+      margin-bottom: var(--spacing-lg);
+      transition: var(--transition);
+    }
+    
+    .card:hover {
+      box-shadow: var(--shadow-md);
+    }
+    
+    .card-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: var(--spacing-md);
+      color: var(--gray-900);
+    }
+    
+    /* ===== BUTTONS ===== */
+    .btn {
+      display: inline-block;
+      padding: var(--spacing-md) var(--spacing-xl);
+      border: none;
+      border-radius: var(--radius);
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 1rem;
+      text-decoration: none;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+    
+    .btn-secondary {
+      background: var(--gray-200);
+      color: var(--gray-700);
+    }
+    
+    .btn-secondary:hover {
+      background: var(--gray-300);
+    }
+    
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+    
+    .btn-success:hover {
+      background: #059669;
+    }
+    
+    /* ===== FORM ELEMENTS ===== */
+    .form-group {
+      margin-bottom: var(--spacing-lg);
+    }
+    
+    label {
+      display: block;
+      margin-bottom: var(--spacing-sm);
+      font-weight: 500;
+      color: var(--gray-700);
+    }
+    
+    input[type="file"],
+    select {
+      width: 100%;
+      padding: var(--spacing-md);
+      border: 2px solid var(--gray-200);
+      border-radius: var(--radius);
+      font-size: 1rem;
+      transition: var(--transition);
+    }
+    
+    input[type="file"]:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-md);
+      margin: var(--spacing-md) 0;
+    }
+    
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      cursor: pointer;
+      padding: var(--spacing-sm) var(--spacing-md);
+      background: var(--gray-100);
+      border-radius: var(--radius);
+      transition: var(--transition);
+    }
+    
+    .checkbox-label:hover {
+      background: var(--gray-200);
+    }
+    
+    input[type="checkbox"] {
+      cursor: pointer;
+    }
+    
+    /* ===== TABLE ===== */
+    .table-container {
+      overflow-x: auto;
+      margin-top: var(--spacing-lg);
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    
+    thead {
+      background: var(--gray-100);
+    }
+    
+    th, td {
+      padding: var(--spacing-md);
+      text-align: left;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    
+    th {
+      font-weight: 600;
+      color: var(--gray-700);
+    }
+    
+    tbody tr:hover {
+      background: var(--gray-50);
+    }
+    
+    /* ===== PROGRESS BAR ===== */
+    .progress-container {
+      margin: var(--spacing-lg) 0;
+      display: none;
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: var(--gray-200);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    
+    .progress-text {
+      margin-top: var(--spacing-sm);
+      text-align: center;
+      font-weight: 500;
+      color: var(--gray-600);
+    }
+    
+    /* ===== LOG OUTPUT ===== */
+    .log-output {
+      background: var(--gray-900);
+      color: #10b981;
+      padding: var(--spacing-md);
+      border-radius: var(--radius);
+      font-family: 'Courier New', monospace;
+      font-size: 0.875rem;
+      max-height: 200px;
+      overflow-y: auto;
+      margin-top: var(--spacing-lg);
+      display: none;
+    }
+    
+    .log-line {
+      margin: var(--spacing-xs) 0;
+    }
+    
+    /* ===== METRICS GRID ===== */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--spacing-lg);
+      margin-top: var(--spacing-lg);
+    }
+    
+    .metric-card {
+      background: white;
+      padding: var(--spacing-lg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      text-align: center;
+      border-left: 4px solid var(--primary);
+    }
+    
+    .metric-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin: var(--spacing-sm) 0;
+    }
+    
+    .metric-label {
+      color: var(--gray-600);
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    
+    .metric-help {
+      display: inline-block;
+      margin-left: var(--spacing-xs);
+      width: 16px;
+      height: 16px;
+      background: var(--gray-300);
+      color: white;
+      border-radius: 50%;
+      font-size: 0.75rem;
+      line-height: 16px;
+      cursor: help;
+    }
+    
+    /* ===== CHART CONTAINER ===== */
+    .chart-container {
+      margin-top: var(--spacing-lg);
+      background: white;
+      padding: var(--spacing-lg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    /* ===== MODAL ===== */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .modal-content {
+      background: white;
+      padding: var(--spacing-xl);
+      border-radius: var(--radius-lg);
+      max-width: 500px;
+      width: 90%;
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--spacing-md);
+    }
+    
+    .modal-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--gray-400);
+      transition: var(--transition);
+    }
+    
+    .modal-close:hover {
+      color: var(--gray-700);
+    }
+    
+    /* ===== FOOTER ===== */
+    footer {
+      background: var(--gray-900);
+      color: var(--gray-300);
+      padding: var(--spacing-xl) 0;
+      text-align: center;
+      margin-top: var(--spacing-2xl);
+    }
+    
+    /* ===== UTILITIES ===== */
+    .hidden {
+      display: none !important;
+    }
+    
+    .flex {
+      display: flex;
+    }
+    
+    .flex-wrap {
+      flex-wrap: wrap;
+    }
+    
+    .gap-md {
+      gap: var(--spacing-md);
+    }
+    
+    .mt-lg {
+      margin-top: var(--spacing-lg);
+    }
+    
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 2rem;
+      }
+      
+      .hero p {
+        font-size: 1rem;
+      }
+      
+      .nav-links {
+        display: none;
+      }
+      
+      .section-title {
+        font-size: 1.5rem;
+      }
+      
+      .card {
+        padding: var(--spacing-lg);
+      }
+      
+      .metrics-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    @media (min-width: 768px) and (max-width: 1024px) {
+      .container {
+        padding: 0 var(--spacing-xl);
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="#home" class="logo">StockPred</a>
+      <ul class="nav-links">
+        <li><a href="#home">Home</a></li>
+        <li><a href="#data">Data</a></li>
+        <li><a href="#models">Models</a></li>
+        <li><a href="#results">Results</a></li>
+        <li><a href="#about">About</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero" id="home">
+    <div class="container">
+      <h1>AI-Powered Stock Prediction</h1>
+      <p>Leverage deep learning models to forecast stock prices with confidence intervals and backtesting</p>
+      <a href="#data" class="btn btn-primary">Get Started</a>
+    </div>
+  </section>
+
+  <main class="container">
+    <!-- Model Selection & Training (moved to top) -->
+    <section id="models">
+      <h2 class="section-title">Model Selection & Training</h2>
+      <p class="section-subtitle">Choose your deep learning architecture and train</p>
+      
+      <div class="card">
+        <div class="form-group">
+          <label for="modelSelect">Select Model Architecture</label>
+          <select id="modelSelect">
+            <option value="LSTM">LSTM (Long Short-Term Memory)</option>
+            <option value="GRU">GRU (Gated Recurrent Unit)</option>
+            <option value="Transformer">Transformer</option>
+          </select>
+        </div>
+        
+        <button class="btn btn-success" id="trainBtn">Train Model</button>
+        
+        <div class="progress-container" id="progressContainer">
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <div class="progress-text" id="progressText">Training: 0%</div>
+        </div>
+        
+        <div class="log-output" id="logOutput" role="log" aria-live="polite" aria-atomic="false"></div>
+      </div>
+    </section>
+
+    <!-- Data Section -->
+    <section id="data">
+      <h2 class="section-title">Data Upload & Fetch</h2>
+      <p class="section-subtitle">Upload your own CSV or use our sample dataset to begin</p>
+      
+      <div class="card">
+        <div class="form-group">
+          <label for="tickerInput">Ticker</label>
+          <input id="tickerInput" placeholder="AAPL" style="width:100%;padding: 0.75rem;border:2px solid var(--gray-200);border-radius: var(--radius);font-size:1rem;" />
+        </div>
+        <div class="form-group">
+          <label for="startDate">Start Date</label>
+          <input type="date" id="startDate" value="2000-01-01" style="width:100%;padding: 0.75rem;border:2px solid var(--gray-200);border-radius: var(--radius);font-size:1rem;" />
+        </div>
+        <div class="form-group">
+          <label for="endDate">End Date</label>
+          <input type="date" id="endDate" style="width:100%;padding: 0.75rem;border:2px solid var(--gray-200);border-radius: var(--radius);font-size:1rem;" />
+        </div>
+        
+        <button class="btn btn-primary" id="predictBackendBtn">Train & Predict (Backend)</button>
+        <hr style="margin: 1rem 0; border: none; border-top:1px solid var(--gray-200);" />
+        <div class="form-group">
+          <label for="csvFile">Upload CSV File</label>
+          <input type="file" id="csvFile" accept=".csv" aria-label="Upload CSV file">
+        </div>
+        
+        <button class="btn btn-secondary" id="fetchSampleBtn">Fetch Sample Data</button>
+        
+        <div id="dataPreview" class="hidden">
+          <h3 class="card-title mt-lg">Data Preview</h3>
+          <div class="table-container">
+            <table id="previewTable">
+              <thead id="tableHead"></thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Technical Indicators -->
+      <div class="card">
+        <h3 class="card-title">Technical Indicators</h3>
+        <div class="checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="rsi" value="RSI">
+            <span>RSI (Relative Strength Index)</span>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="ema" value="EMA20">
+            <span>EMA20 (Exponential Moving Average)</span>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="macd" value="MACD">
+            <span>MACD (Moving Average Convergence Divergence)</span>
+          </label>
+        </div>
+        <button class="btn btn-primary" id="applyIndicators">Apply Indicators</button>
+      </div>
+    </section>
+
+    
+
+    <!-- Predictions & Results -->
+    <section id="results">
+      <h2 class="section-title">Predictions & Analysis</h2>
+      <p class="section-subtitle">View model predictions with confidence intervals</p>
+      
+      <div class="card">
+        <div class="chart-container">
+          <canvas id="predictionChart"></canvas>
+        </div>
+        <div class="mt-lg" style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
+          <div>
+            <label for="inspectDate">Inspect Date</label>
+            <input type="date" id="inspectDate" style="padding:0.5rem;border:2px solid var(--gray-200);border-radius: var(--radius);" />
+            <button class="btn btn-secondary" id="inspectBtn">Show Values</button>
+          </div>
+          <div style="display:flex;gap:1rem;">
+            <div class="metric-card">
+              <div class="metric-label">Actual</div>
+              <div class="metric-value" id="inspectActual">-</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Predicted</div>
+              <div class="metric-value" id="inspectPred">-</div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-lg" style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
+          <div>
+            <label for="futureDays">Predict Next N Days</label>
+            <input type="number" id="futureDays" value="5" min="1" max="60" style="width:80px;padding:0.5rem;border:2px solid var(--gray-200);border-radius: var(--radius);" />
+            <button class="btn btn-primary" id="futureBtn">Forecast</button>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Next Day Forecast</div>
+            <div class="metric-value" id="futureNext">-</div>
+          </div>
+        </div>
+        <div class="table-container mt-lg">
+          <table id="futureTable">
+            <thead><tr><th>Date</th><th>Predicted</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Ensemble Predictions -->
+      <div class="card">
+        <h3 class="card-title">Ensemble Prediction</h3>
+        <p>Combine multiple models for improved accuracy and confidence</p>
+        <button class="btn btn-primary" id="ensembleBtn">Compute Ensemble</button>
+        <div id="ensembleResults" class="hidden mt-lg">
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-label">Ensemble Prediction</div>
+              <div class="metric-value" id="ensemblePred">$0.00</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Confidence Interval</div>
+              <div class="metric-value" id="confidenceInterval">±$0.00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Backtesting -->
+      <div class="card">
+        <h3 class="card-title">Backtesting Results</h3>
+        <p>Evaluate strategy performance on historical data</p>
+        <button class="btn btn-primary" id="backtestBtn">Run Backtest</button>
+        
+        <div id="backtestResults" class="hidden mt-lg">
+          <div class="metrics-grid" id="metricsCards" style="display:none;">
+            <div class="metric-card">
+              <div class="metric-label">RMSE <span class="metric-help" title="Root Mean Square Error">?</span></div>
+              <div class="metric-value" id="rmseValue">0.00</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Directional Accuracy <span class="metric-help" title="Percentage of correct direction predictions">?</span></div>
+              <div class="metric-value" id="dirAccValue">0%</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Sharpe Ratio <span class="metric-help" title="Risk-adjusted return metric">?</span></div>
+              <div class="metric-value" id="sharpeValue">0.00</div>
+            </div>
+          </div>
+          
+          <div class="chart-container">
+            <canvas id="equityChart"></canvas>
+          </div>
+          
+          <button class="btn btn-secondary mt-lg" id="downloadBtn">Download Results as CSV</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about">
+      <h2 class="section-title">About StockPred</h2>
+      <div class="card">
+        <p>StockPred is an AI-powered stock price prediction platform that uses state-of-the-art deep learning models including LSTM, GRU, and Transformer architectures. Our platform provides:</p>
+        <ul style="margin-left: var(--spacing-xl); margin-top: var(--spacing-md);">
+          <li>Real-time data processing and technical indicator calculation</li>
+          <li>Multiple model architectures for comparison</li>
+          <li>Ensemble predictions with confidence intervals</li>
+          <li>Comprehensive backtesting with performance metrics</li>
+          <li>Easy-to-use interface for both beginners and experts</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <p>&copy; 2025 StockPred. Built with AI and passion for finance.</p>
+    </div>
+  </footer>
+
+  <!-- Modal for Metric Explanations -->
+  <div class="modal" id="metricModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalTitle">Metric Explanation</h3>
+        <button class="modal-close" id="modalClose">&times;</button>
+      </div>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <script>
+    // ===== GLOBAL STATE =====
+    let stockData = [];
+    let predictions = [];
+    let predictionChart = null;
+    let equityChart = null;
+    const API_BASE = 'http://localhost:5000';
+    
+    // Sample data embedded for offline use
+    const SAMPLE_DATA = [
+      { date: '2024-01-01', open: 150.00, high: 155.00, low: 149.00, close: 153.50, volume: 1000000 },
+      { date: '2024-01-02', open: 153.50, high: 157.00, low: 152.00, close: 156.20, volume: 1100000 },
+      { date: '2024-01-03', open: 156.20, high: 158.50, low: 155.00, close: 157.80, volume: 1050000 },
+      { date: '2024-01-04', open: 157.80, high: 160.00, low: 156.50, close: 159.20, volume: 1200000 },
+      { date: '2024-01-05', open: 159.20, high: 161.00, low: 158.00, close: 160.50, volume: 1150000 },
+      { date: '2024-01-08', open: 160.50, high: 162.50, low: 159.50, close: 161.80, volume: 1080000 },
+      { date: '2024-01-09', open: 161.80, high: 164.00, low: 160.00, close: 162.90, volume: 1250000 },
+      { date: '2024-01-10', open: 162.90, high: 165.00, low: 161.50, close: 164.30, volume: 1300000 },
+      { date: '2024-01-11', open: 164.30, high: 166.50, low: 163.00, close: 165.70, volume: 1180000 },
+      { date: '2024-01-12', open: 165.70, high: 168.00, low: 164.50, close: 167.20, volume: 1400000 }
+    ];
+    
+    // ===== EVENT LISTENERS =====
+    document.getElementById('csvFile').addEventListener('change', handleFileUpload);
+    document.getElementById('fetchSampleBtn').addEventListener('click', loadSampleData);
+    document.getElementById('applyIndicators').addEventListener('click', applyIndicators);
+    document.getElementById('predictBackendBtn').addEventListener('click', predictFromBackend);
+    document.getElementById('trainBtn').addEventListener('click', trainModel);
+    document.getElementById('ensembleBtn').addEventListener('click', computeEnsemble);
+    document.getElementById('backtestBtn').addEventListener('click', runBacktest);
+    document.getElementById('downloadBtn').addEventListener('click', downloadCSV);
+    document.getElementById('modalClose').addEventListener('click', closeModal);
+    document.getElementById('inspectBtn').addEventListener('click', inspectPoint);
+    document.getElementById('futureBtn').addEventListener('click', forecastFuture);
+    
+    // ===== DATA LOADING FUNCTIONS =====
+    
+    /**
+     * Load sample data embedded in the script
+     * No API calls required - works offline
+     */
+    function loadSampleData() {
+      stockData = [...SAMPLE_DATA];
+      renderDataPreview(stockData);
+      showNotification('Sample data loaded successfully!');
+    }
+    
+    /**
+     * Handle CSV file upload
+     * Parse CSV on client-side and display preview
+     */
+    function handleFileUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const csv = event.target.result;
+        stockData = parseCSV(csv);
+        renderDataPreview(stockData);
+        showNotification('CSV file loaded successfully!');
+      };
+      reader.readAsText(file);
+    }
+    
+    /**
+     * Parse CSV string into array of objects
+     * Simple parser for standard CSV format
+     */
+    function parseCSV(csv) {
+      const lines = csv.trim().split('\n');
+      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+      const data = [];
+      
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',');
+        const row = {};
+        headers.forEach((header, index) => {
+          const value = values[index].trim();
+          row[header] = isNaN(value) ? value : parseFloat(value);
+        });
+        data.push(row);
+      }
+      
+      return data;
+    }
+    
+    /**
+     * Render data preview table (first 8 rows)
+     */
+    function renderDataPreview(data) {
+      if (data.length === 0) return;
+      
+      const preview = data.slice(0, 8);
+      const headers = Object.keys(preview[0]);
+      
+      // Render table headers
+      const thead = document.getElementById('tableHead');
+      thead.innerHTML = '<tr>' + headers.map(h => `<th>${h.toUpperCase()}</th>`).join('') + '</tr>';
+      
+      // Render table body
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = preview.map(row => 
+        '<tr>' + headers.map(h => `<td>${typeof row[h] === 'number' ? row[h].toFixed(2) : row[h]}</td>`).join('') + '</tr>'
+      ).join('');
+      
+      document.getElementById('dataPreview').classList.remove('hidden');
+    }
+    
+    // ===== TECHNICAL INDICATORS =====
+    
+    /**
+     * Apply selected technical indicators
+     * Simulated calculation - in production, connect to real indicator library
+     */
+    function applyIndicators() {
+      const rsi = document.getElementById('rsi').checked;
+      const ema = document.getElementById('ema').checked;
+      const macd = document.getElementById('macd').checked;
+      
+      if (!stockData.length) {
+        showNotification('Please load data first!', 'error');
+        return;
+      }
+      
+      // Simulate indicator calculation with mock values
+      stockData.forEach((row, i) => {
+        if (rsi) row.rsi = 30 + Math.random() * 40; // RSI between 30-70
+        if (ema) row.ema20 = row.close * (0.95 + Math.random() * 0.1); // EMA around close price
+        if (macd) row.macd = -2 + Math.random() * 4; // MACD between -2 and 2
+      });
+      
+      renderDataPreview(stockData);
+      showNotification('Technical indicators applied!');
+    }
+    
+    // ===== MODEL TRAINING =====
+    
+    // Train the selected model by calling the backend (no more simulation)
+    async function trainModel() {
+      const model = document.getElementById('modelSelect').value;
+      const progressContainer = document.getElementById('progressContainer');
+      const progressFill = document.getElementById('progressFill');
+      const progressText = document.getElementById('progressText');
+      const logOutput = document.getElementById('logOutput');
+      progressContainer.style.display = 'block';
+      logOutput.style.display = 'block';
+      logOutput.innerHTML = '';
+      progressFill.style.width = '5%';
+      progressText.textContent = 'Training started...';
+      addLog(`Initializing ${model} model (backend)...`);
+      // Delegate to backend training + prediction
+      await predictFromBackend();
+    }
+    
+    /**
+     * Generate simulated predictions
+     * In production, this would use the trained model
+     */
+    function generatePredictions() {
+      predictions = stockData.map((row, i) => {
+        const actual = row.close;
+        // Simulate prediction with some noise
+        const predicted = actual * (0.98 + Math.random() * 0.04);
+        const confidence = 0.95 + Math.random() * 0.04;
+        
+        return {
+          date: row.date,
+          actual: actual,
+          predicted: predicted,
+          lower: predicted * (1 - (1 - confidence)),
+          upper: predicted * (1 + (1 - confidence))
+        };
+      });
+      
+      renderPredictionChart();
+    }
+
+    /**
+     * Call backend /api/predict to fetch data, train models, and return predictions
+     */
+    async function predictFromBackend() {
+      const ticker = (document.getElementById('tickerInput').value || 'AAPL').trim().toUpperCase();
+      const start = document.getElementById('startDate').value || '2000-01-01';
+      const end = document.getElementById('endDate').value || new Date().toISOString().slice(0,10);
+      const model = document.getElementById('modelSelect').value;
+
+      // Show training progress UI while backend trains
+      const progressContainer = document.getElementById('progressContainer');
+      const progressFill = document.getElementById('progressFill');
+      const progressText = document.getElementById('progressText');
+      const logOutput = document.getElementById('logOutput');
+      progressContainer.style.display = 'block';
+      logOutput.style.display = 'block';
+      logOutput.innerHTML = '';
+      progressFill.style.width = '20%';
+      progressText.textContent = 'Training started...';
+
+      showNotification(`Requesting backend predictions for ${ticker}...`);
+      try {
+        const res = await fetch(`${API_BASE}/api/predict`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ticker, start_date: start, end_date: end, model, epochs: 20, early_stopping: true, future_days: parseInt(document.getElementById('futureDays').value || '5', 10) })
+        });
+        if (!res.ok) throw new Error('Backend error');
+        const data = await res.json();
+        progressFill.style.width = '100%';
+        progressText.textContent = 'Training: 100%';
+
+        // Build predictions array to reuse charting logic
+        predictions = data.dates.map((d, i) => ({
+          date: d,
+          actual: data.actual[i],
+          predicted: data.predictions.Ensemble[i],
+          lower: data.confidence.lower[i],
+          upper: data.confidence.upper[i]
+        }));
+
+        // Show training progress (histories)
+        if (data.histories) {
+          const logOutput = document.getElementById('logOutput');
+          logOutput.style.display = 'block';
+          logOutput.innerHTML = '';
+          const models = Object.keys(data.histories);
+          models.forEach(m => {
+            const h = data.histories[m];
+            const epochs = Math.max(h.loss?.length || 0, h.val_loss?.length || 0);
+            for (let i = 0; i < epochs; i++) {
+              const loss = h.loss?.[i] ?? null;
+              const vloss = h.val_loss?.[i] ?? null;
+              addLog(`${m} epoch ${i+1}/${epochs} - loss: ${loss?.toFixed ? loss.toFixed(4) : loss} - val_loss: ${vloss?.toFixed ? vloss.toFixed(4) : vloss}`);
+            }
+          });
+        }
+
+        renderPredictionChart();
+
+        // Update ensemble UI
+        document.getElementById('ensemblePred').textContent = ' ' + data.predictions.Ensemble[data.predictions.Ensemble.length - 1].toFixed(2);
+        const lastLower = data.confidence.lower[data.confidence.lower.length - 1];
+        const lastUpper = data.confidence.upper[data.confidence.upper.length - 1];
+        document.getElementById('confidenceInterval').textContent = `± ${(lastUpper - lastLower).toFixed(2)}`;
+        document.getElementById('ensembleResults').classList.remove('hidden');
+
+        // Backtest results and chart (show on page)
+        document.getElementById('rmseValue').textContent = data.metrics.Ensemble.RMSE.toFixed(4);
+        document.getElementById('dirAccValue').textContent = data.metrics.Ensemble.Directional_Accuracy.toFixed(1) + '%';
+        document.getElementById('sharpeValue').textContent = data.backtest.metrics['Sharpe Ratio'].toFixed(2);
+        document.getElementById('metricsCards').style.display = 'grid';
+        renderEquityChart(data.backtest.equity);
+        document.getElementById('backtestResults').classList.remove('hidden');
+
+        // Populate data preview from backend actuals
+        stockData = data.dates.map((d, i) => ({ date: d, close: data.actual[i] }));
+        renderDataPreview(stockData);
+
+        // Render future forecast from backend if provided
+        if (data.future && data.future.dates && data.future.predictions) {
+          document.getElementById('futureNext').textContent = `${data.future.predictions[0].toFixed(2)} (${data.future.dates[0]})`;
+          const tbody = document.querySelector('#futureTable tbody');
+          tbody.innerHTML = data.future.dates.map((dt, i) => `<tr><td>${dt}</td><td>$${data.future.predictions[i].toFixed(2)}</td></tr>`).join('');
+        }
+      } catch (e) {
+        console.error(e);
+        showNotification('Failed to fetch backend predictions. Is the API running?', 'error');
+      }
+    }
+
+    // Inspect actual vs predicted at a selected date
+    function inspectPoint() {
+      const date = document.getElementById('inspectDate').value;
+      if (!date || !predictions.length) return;
+      const idx = predictions.findIndex(p => p.date === date);
+      if (idx === -1) {
+        showNotification('Date not in prediction range', 'error');
+        return;
+      }
+      document.getElementById('inspectActual').textContent = predictions[idx].actual?.toFixed ? predictions[idx].actual.toFixed(2) : predictions[idx].actual;
+      document.getElementById('inspectPred').textContent = predictions[idx].predicted?.toFixed ? predictions[idx].predicted.toFixed(2) : predictions[idx].predicted;
+    }
+
+    // Naive future forecast: extend last predicted change forward
+    function forecastFuture() {
+      if (!predictions.length) return;
+      const n = Math.max(1, Math.min(60, parseInt(document.getElementById('futureDays').value || '1', 10)));
+      const last = predictions[predictions.length - 1].predicted;
+      const prev = predictions[predictions.length - 2]?.predicted ?? predictions[predictions.length - 1].actual;
+      const dailyChange = last - prev;
+      const results = [];
+      const lastDate = new Date(predictions[predictions.length - 1].date);
+      let cur = last;
+      for (let i = 1; i <= n; i++) {
+        cur = cur + dailyChange;
+        const d = new Date(lastDate);
+        d.setDate(d.getDate() + i);
+        results.push({ date: d.toISOString().slice(0,10), value: cur });
+      }
+      document.getElementById('futureNext').textContent = results[0].value.toFixed(2) + ' (' + results[0].date + ')';
+      // Render on page table
+      const tbody = document.querySelector('#futureTable tbody');
+      tbody.innerHTML = results.map(r => `<tr><td>${r.date}</td><td>$${r.value.toFixed(2)}</td></tr>`).join('');
+      showNotification(`Forecasted next ${n} days. Table shows all ${n} predictions.`);
+    }
+    
+    /**
+     * Render predictions chart with confidence bands
+     */
+    function renderPredictionChart() {
+      const ctx = document.getElementById('predictionChart').getContext('2d');
+      
+      // Destroy existing chart if any
+      if (predictionChart) {
+        predictionChart.destroy();
+      }
+      
+      const labels = predictions.map(p => p.date);
+      
+      predictionChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Actual Price',
+              data: predictions.map(p => p.actual),
+              borderColor: '#0ea5e9',
+              backgroundColor: 'rgba(14, 165, 233, 0.1)',
+              borderWidth: 2,
+              pointRadius: 3,
+              tension: 0.4
+            },
+            {
+              label: 'Predicted Price',
+              data: predictions.map(p => p.predicted),
+              borderColor: '#8b5cf6',
+              backgroundColor: 'rgba(139, 92, 246, 0.1)',
+              borderWidth: 2,
+              pointRadius: 3,
+              borderDash: [5, 5],
+              tension: 0.4
+            },
+            {
+              label: 'Confidence Band',
+              data: predictions.map(p => p.upper),
+              borderColor: 'rgba(139, 92, 246, 0.2)',
+              backgroundColor: 'rgba(139, 92, 246, 0.1)',
+              fill: '+1',
+              pointRadius: 0,
+              borderWidth: 1,
+              tension: 0.4
+            },
+            {
+              label: 'Lower Bound',
+              data: predictions.map(p => p.lower),
+              borderColor: 'rgba(139, 92, 246, 0.2)',
+              backgroundColor: 'rgba(139, 92, 246, 0.1)',
+              fill: false,
+              pointRadius: 0,
+              borderWidth: 1,
+              tension: 0.4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top'
+            },
+            title: {
+              display: true,
+              text: 'Stock Price Predictions with Confidence Intervals'
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              title: {
+                display: true,
+                text: 'Price ($)'
+              }
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'Date'
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // ===== ENSEMBLE PREDICTIONS =====
+    
+    /**
+     * Compute ensemble prediction by averaging multiple models
+     * Simulates LSTM, GRU, and Transformer predictions
+     */
+    function computeEnsemble() {
+      if (!predictions.length) {
+        showNotification('Please train a model first!', 'error');
+        return;
+      }
+      
+      // Simulate predictions from three models
+      const lstm = predictions.map(p => p.predicted * (0.99 + Math.random() * 0.02));
+      const gru = predictions.map(p => p.predicted * (0.98 + Math.random() * 0.04));
+      const transformer = predictions.map(p => p.predicted * (0.97 + Math.random() * 0.06));
+      
+      // Calculate ensemble (average)
+      const ensemble = lstm.map((val, i) => (val + gru[i] + transformer[i]) / 3);
+      
+      // Calculate standard deviation for confidence interval
+      const lastPredictions = [lstm[lstm.length - 1], gru[gru.length - 1], transformer[transformer.length - 1]];
+      const mean = lastPredictions.reduce((a, b) => a + b, 0) / 3;
+      const variance = lastPredictions.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / 3;
+      const stdDev = Math.sqrt(variance);
+      
+      // Display results
+      document.getElementById('ensemblePred').textContent = ' +' + mean.toFixed(2);
+      document.getElementById('confidenceInterval').textContent = '± ' + stdDev.toFixed(2);
+      document.getElementById('ensembleResults').classList.remove('hidden');
+      
+      // Update chart with ensemble
+      predictionChart.data.datasets.push({
+        label: 'Ensemble Prediction',
+        data: ensemble,
+        borderColor: '#10b981',
+        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+        borderWidth: 3,
+        pointRadius: 4,
+        tension: 0.4
+      });
+      predictionChart.update();
+      
+      showNotification('Ensemble prediction computed!');
+    }
+    
+    // ===== BACKTESTING =====
+    
+    /**
+     * Run backtest simulation
+     * Simulates a simple trading strategy based on predictions
+     */
+    function runBacktest() {
+      if (!predictions.length) {
+        showNotification('Please train a model first!', 'error');
+        return;
+      }
+      
+      // Calculate metrics
+      const rmse = calculateRMSE(predictions);
+      const dirAcc = calculateDirectionalAccuracy(predictions);
+      const sharpe = calculateSharpeRatio(predictions);
+      
+      // Display metrics
+      document.getElementById('rmseValue').textContent = rmse.toFixed(4);
+      document.getElementById('dirAccValue').textContent = dirAcc.toFixed(1) + '%';
+      document.getElementById('sharpeValue').textContent = sharpe.toFixed(2);
+      
+      // Generate equity curve
+      const equityCurve = generateEquityCurve(predictions);
+      renderEquityChart(equityCurve);
+      
+      document.getElementById('backtestResults').classList.remove('hidden');
+      showNotification('Backtest completed!');
+    }
+    
+    /**
+     * Calculate Root Mean Square Error
+     */
+    function calculateRMSE(preds) {
+      const squaredErrors = preds.map(p => Math.pow(p.actual - p.predicted, 2));
+      const meanSquaredError = squaredErrors.reduce((a, b) => a + b, 0) / squaredErrors.length;
+      return Math.sqrt(meanSquaredError);
+    }
+    
+    /**
+     * Calculate directional accuracy (% of correct direction predictions)
+     */
+    function calculateDirectionalAccuracy(preds) {
+      let correct = 0;
+      for (let i = 1; i < preds.length; i++) {
+        const actualDir = preds[i].actual - preds[i - 1].actual;
+        const predDir = preds[i].predicted - preds[i - 1].predicted;
+        if ((actualDir > 0 && predDir > 0) || (actualDir < 0 && predDir < 0)) {
+          correct++;
+        }
+      }
+      return (correct / (preds.length - 1)) * 100;
+    }
+    
+    /**
+     * Calculate Sharpe Ratio (simulated)
+     */
+    function calculateSharpeRatio(preds) {
+      // Simulate daily returns
+      const returns = [];
+      for (let i = 1; i < preds.length; i++) {
+        const actualDir = preds[i].actual - preds[i - 1].actual;
+        const predDir = preds[i].predicted - preds[i - 1].predicted;
+        // Simple strategy: go long if predicted up, short if predicted down
+        const ret = (actualDir * Math.sign(predDir)) / preds[i - 1].actual;
+        returns.push(ret);
+      }
+      
+      const meanReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
+      const variance = returns.reduce((sum, r) => sum + Math.pow(r - meanReturn, 2), 0) / returns.length;
+      const stdDev = Math.sqrt(variance);
+      
+      // Annualized Sharpe (assuming 252 trading days)
+      return (meanReturn * Math.sqrt(252)) / stdDev;
+    }
+    
+    /**
+     * Generate equity curve from trading strategy
+     */
+    function generateEquityCurve(preds) {
+      const equity = [10000]; // Starting capital
+      
+      for (let i = 1; i < preds.length; i++) {
+        const actualReturn = (preds[i].actual - preds[i - 1].actual) / preds[i - 1].actual;
+        const predDir = preds[i].predicted - preds[i - 1].predicted;
+        const position = Math.sign(predDir); // 1 for long, -1 for short
+        
+        const strategyReturn = actualReturn * position;
+        const newEquity = equity[i - 1] * (1 + strategyReturn);
+        equity.push(newEquity);
+      }
+      
+      return equity;
+    }
+    
+    /**
+     * Render equity curve chart
+     */
+    function renderEquityChart(equity) {
+      const ctx = document.getElementById('equityChart').getContext('2d');
+      
+      if (equityChart) {
+        equityChart.destroy();
+      }
+      
+      const labels = predictions.map(p => p.date);
+      
+      equityChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Portfolio Value ($)',
+            data: equity,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              display: true
+            },
+            title: {
+              display: true,
+              text: 'Backtesting Equity Curve'
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              title: {
+                display: true,
+                text: 'Portfolio Value ($)'
+              }
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'Date'
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // ===== DOWNLOAD RESULTS =====
+    
+    /**
+     * Download predictions and backtest results as CSV
+     */
+    function downloadCSV() {
+      if (!predictions.length) {
+        showNotification('No results to download!', 'error');
+        return;
+      }
+      
+      // Create CSV content
+      let csv = 'Date,Actual,Predicted,Lower Bound,Upper Bound\n';
+      predictions.forEach(p => {
+        csv += `${p.date},${p.actual.toFixed(2)},${p.predicted.toFixed(2)},${p.lower.toFixed(2)},${p.upper.toFixed(2)}\n`;
+      });
+      
+      // Create download link
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'stock_predictions.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      showNotification('Results downloaded successfully!');
+    }
+    
+    // ===== UTILITY FUNCTIONS =====
+    
+    /**
+     * Add log line to training output
+     */
+    function addLog(message) {
+      const logOutput = document.getElementById('logOutput');
+      const line = document.createElement('div');
+      line.className = 'log-line';
+      line.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      logOutput.appendChild(line);
+      logOutput.scrollTop = logOutput.scrollHeight;
+    }
+    
+    /**
+     * Sleep utility for async delays
+     */
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+    
+    /**
+     * Show notification (simple implementation)
+     */
+    function showNotification(message, type = 'success') {
+      // Create notification element
+      const notif = document.createElement('div');
+      notif.textContent = message;
+      notif.style.cssText = `
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        background: ${type === 'error' ? '#ef4444' : '#10b981'};
+        color: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        z-index: 9999;
+        animation: slideIn 0.3s ease;
+      `;
+      
+      document.body.appendChild(notif);
+      
+      setTimeout(() => {
+        notif.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => document.body.removeChild(notif), 300);
+      }, 3000);
+    }
+    
+    /**
+     * Close modal
+     */
+    function closeModal() {
+      document.getElementById('metricModal').style.display = 'none';
+    }
+    
+    // Add animation keyframes dynamically
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+      @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    // Smooth scroll for navigation
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+    
+    // Initialize - show welcome message
+    console.log('%cStockPred AI%c\nStock Price Prediction Platform\nReady to analyze!', 
+      'color: #0ea5e9; font-size: 20px; font-weight: bold;',
+      'color: #6b7280; font-size: 14px;'
+    );
+  </script>
+</body>
+</html>
