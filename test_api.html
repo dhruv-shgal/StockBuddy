@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        button {
+            background: #00ffe0;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #00ccb3;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-left: 4px solid #00ffe0;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .error {
+            border-left-color: #ff3366;
+            color: #ff3366;
+        }
+        .success {
+            border-left-color: #00ff88;
+            color: #00ff88;
+        }
+    </style>
+</head>
+<body>
+    <h1>StockBuddy API Test</h1>
+    
+    <div class="test-box">
+        <h2>Test 1: Health Check</h2>
+        <button onclick="testHealth()">Test Health Endpoint</button>
+        <div id="healthResult" class="result" style="display:none;"></div>
+    </div>
+    
+    <div class="test-box">
+        <h2>Test 2: Quick Prediction</h2>
+        <p>This will train a model with minimal epochs (5) for quick testing</p>
+        <button onclick="testPrediction()">Test Prediction Endpoint</button>
+        <div id="predResult" class="result" style="display:none;"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000';
+
+        async function testHealth() {
+            const resultDiv = document.getElementById('healthResult');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Testing...';
+            resultDiv.className = 'result';
+
+            try {
+                const response = await fetch(`${API_URL}/api/health`);
+                const data = await response.json();
+                
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✓ Success!\n\nResponse: ${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `✗ Error: ${error.message}\n\nMake sure Flask API is running on port 5000`;
+            }
+        }
+
+        async function testPrediction() {
+            const resultDiv = document.getElementById('predResult');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Testing... This may take 1-2 minutes...';
+            resultDiv.className = 'result';
+
+            try {
+                const response = await fetch(`${API_URL}/api/predict`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        ticker: 'AAPL',
+                        start_date: '2023-01-01',
+                        end_date: '2024-01-01',
+                        sequence_length: 60,
+                        epochs: 5,
+                        batch_size: 16,
+                        future_days: 3,
+                        model: 'LSTM',
+                        early_stopping: false
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✓ Success!\n\nTicker: ${data.ticker}\nDates: ${data.dates.length} data points\nRMSE: ${data.metrics.LSTM.RMSE.toFixed(4)}\nDirectional Accuracy: ${data.metrics.LSTM.Directional_Accuracy.toFixed(2)}%\nSharpe Ratio: ${data.backtest.metrics['Sharpe Ratio'].toFixed(2)}\n\nFuture Predictions:\n${data.future.dates.map((d, i) => `${d}: $${data.future.predictions[i].toFixed(2)}`).join('\n')}`;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `✗ Error: ${error.message}\n\nMake sure Flask API is running on port 5000`;
+            }
+        }
+    </script>
+</body>
+</html>
